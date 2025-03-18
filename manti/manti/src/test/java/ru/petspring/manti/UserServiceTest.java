@@ -98,7 +98,7 @@ public class UserServiceTest {
         Assertions.assertEquals("test Name", result.getName());
         Assertions.assertEquals("Test Title", result.getTasks().get(0).getTitle());
 
-        verify(userRepository, times(2)).findByName(user.getName());
+        verify(userRepository, times(1)).findByName(user.getName());
     }
 
     @Test
