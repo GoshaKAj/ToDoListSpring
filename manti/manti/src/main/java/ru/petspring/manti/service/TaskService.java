@@ -11,14 +11,10 @@ import java.util.List;
 @Service
 public interface TaskService {
 
-    TaskDTO createTask(TaskEntity taskEntity, Long user_id);
-
-    TaskDTO updateTask(Long id, TaskEntity taskEntity);
-
+    TaskDTO createTask(TaskDTO taskDTO, Long user_id);
+    TaskDTO updateTask(Long task_id, TaskDTO taskDTO, Long user_id);
     List<TaskDTO> filterTasksByStatus(FilterByStatus status, Long user_id);
-
-    void deleteTask(Long id, Long user_id);
-
     List<TaskDTO> sortTasks(SortByDateOrStatus filter, Long user_id);
+    void deleteTask(Long task_id, Long user_id);
 
 }

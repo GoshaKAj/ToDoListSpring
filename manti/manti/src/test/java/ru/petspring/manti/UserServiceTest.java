@@ -39,7 +39,7 @@ public class UserServiceTest {
         user.setName("test Name");
         user.setId(1L);
 
-        when(userRepository.findByName(user.getName())).thenReturn(null);
+       // when(userRepository.findByName(user.getName())).thenReturn(null);
         when(userRepository.save(user)).thenReturn(user);
 
         UserDTO result = userService.saveUser(user);
@@ -47,7 +47,7 @@ public class UserServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals("test Name", result.getName());
 
-        verify(userRepository).findByName(user.getName());
+        //verify(userRepository).findByName(user.getName());
         verify(userRepository).save(user);
     }
 
@@ -107,14 +107,14 @@ public class UserServiceTest {
         user.setId(1L);
         user.setName("test Name");
 
-
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        //when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(userRepository.existsById(1L)).thenReturn(true);
 
         userService.deleteUser(user.getId());
 
         Assertions.assertEquals(0, userService.getAllUsers().size());
 
-        verify(userRepository, times(1)).findById(user.getId());
+        verify(userRepository, times(1)).existsById(user.getId());
         verify(userRepository, times(1)).deleteById(user.getId());
     }
 }

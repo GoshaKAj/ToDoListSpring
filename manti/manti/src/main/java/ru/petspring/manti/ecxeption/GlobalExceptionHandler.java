@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         log.error(exception.getMessage(), exception);
         return new ErrorDetails(HttpStatus.CONFLICT, exception.getMessage());
     }
-    
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorDetails handleMethodArgumentNotValidException(InvalidStatusException exception) {

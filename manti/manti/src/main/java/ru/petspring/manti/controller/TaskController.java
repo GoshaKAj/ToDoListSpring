@@ -2,6 +2,7 @@ package ru.petspring.manti.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -15,51 +16,47 @@ import ru.petspring.manti.service.TaskService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/todos")
+@RequestMapping("/api/v1/users/{user_id}/tasks")
+@RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
 
-    @Autowired
-    public TaskController(TaskService taskService) {
-        this.taskService = taskService;
-    }
-
-    @PostMapping("create_task")
-    public TaskDTO createTask(@Valid @RequestBody TaskEntity taskEntity,
-                              BindingResult bindingResult,
-                              @RequestParam Long user_id) {
+    @PostMapping
+    public TaskDTO createTask( @PathVariable Long user_id,
+                               @Valid @RequestBody TaskDTO taskDTO, BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new InvalidStatusException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-       return taskService.createTask(taskEntity, user_id);
+       return taskService.createTask(taskDTO, user_id);
     }
 
-    @GetMapping("filter_task/{status}")
-    public List<TaskDTO> filterTasksByStatus(@PathVariable FilterByStatus status,
-                                             @RequestParam Long user_id){
+    @PutMapping("{task_id}")
+    public TaskDTO updateTask(@PathVariable Long user_id,
+                              @PathVariable Long task_id,
+                              @Valid @RequestBody TaskDTO taskDTO, BindingResult bindingResult){
+        if(bindingResult.hasErrors()) {
+            throw new InvalidStatusException(bindingResult.getAllErrors().get(0).getDefaultMessage());
+        }
+        return taskService.updateTask(task_id, taskDTO, user_id);
+
+    }
+
+    @GetMapping("/filter")
+    public List<TaskDTO> filterTasksByStatus(@PathVariable Long user_id,
+                                             @RequestParam FilterByStatus status){
        return taskService.filterTasksByStatus(status, user_id);
     }
 
-    @PutMapping("update_task/{id}")
-    public TaskDTO updateTask(@PathVariable Long id,
-                               @Valid @RequestBody TaskEntity taskEntity, BindingResult bindingResult){
-        if(bindingResult.hasErrors()) {
-            throw new InvalidStatusException(bindingResult.getAllErrors().get(0).getDefaultMessage());
-        }
-        return taskService.updateTask(id, taskEntity);
-
-    }
-
-    @GetMapping("sort/{filter}")
-    public List<TaskDTO> sortTasksByDateOrStatus(@PathVariable SortByDateOrStatus filter,
-                                                 @RequestParam Long user_id){
+    @GetMapping("/sort")
+    public List<TaskDTO> sortTasksByDateOrStatus(@PathVariable Long user_id,
+                                                 @RequestParam SortByDateOrStatus filter){
         return taskService.sortTasks(filter, user_id);
     }
 
-    @DeleteMapping("delete_task/{id}")
-    void deleteTaskById(@PathVariable Long id,
-                        @RequestParam Long user_id){
-        taskService.deleteTask(id, user_id);
+    @DeleteMapping("{task_id}")
+    void deleteTaskById(@PathVariable Long user_id,
+                        @PathVariable Long task_id){
+        taskService.deleteTask(task_id, user_id);
     }
 }

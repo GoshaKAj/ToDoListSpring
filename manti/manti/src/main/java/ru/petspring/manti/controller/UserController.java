@@ -3,6 +3,7 @@ package ru.petspring.manti.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
@@ -18,21 +19,18 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    @PostMapping("create_user")
+    @PostMapping
     public UserDTO saveUser(@Valid @RequestBody UserEntity userEntity,
                             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -41,12 +39,12 @@ public class UserController {
         return userService.saveUser(userEntity);
     }
 
-    @DeleteMapping("delete/{id}")
-    public void deleteUser(@PathVariable Long id){
-        userService.deleteUser(id);
+    @DeleteMapping("{user_id}")
+    public void deleteUser(@PathVariable Long user_id){
+        userService.deleteUser(user_id);
     }
 
-    @GetMapping("select/{name}")
+    @GetMapping("{name}")
     public UserDTO getUserByName(@PathVariable String name){
         return userService.findByName(name);
     }

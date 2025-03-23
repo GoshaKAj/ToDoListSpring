@@ -10,10 +10,7 @@ import java.util.List;
 public interface UserService {
 
     UserDTO saveUser(UserEntity userEntity);
-
     void deleteUser(Long id);
-
     List<UserDTO> getAllUsers();
-
     UserDTO findByName(String name);
 }

@@ -22,6 +22,7 @@ public class UserEntity {
 
     @NotEmpty(message = "Name should not be empty")
     @Size(min = 2, max = 20, message = "Name should be between 2 and 20")
+    @Column(unique = true)
     private String name;
 
     @NotEmpty(message = "Password should not be empty")

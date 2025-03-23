@@ -2,6 +2,7 @@ package ru.petspring.manti.service.implService;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,42 +18,40 @@ import ru.petspring.manti.service.TaskService;
 
 import java.util.List;
 
+
+
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
-
     private final UserRepository userRepository;
 
-    @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
-        this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
-    }
-
     @Override
-    public TaskDTO createTask(TaskEntity taskEntity, Long user_id) {
+    public TaskDTO createTask(TaskDTO taskDTO, Long user_id) {
         UserEntity userEntity = userRepository.findById(user_id)
                 .orElseThrow(()-> new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден"));
+        TaskEntity taskEntity = TaskEntity.toEntityTask(taskDTO);
         taskEntity.setUserEntity(userEntity);
         return TaskDTO.toModel(taskRepository.save(taskEntity));
     }
 
     @Override
-    public void deleteTask(Long id, Long user_id) {
-        UserEntity userEntity = userRepository.findById(user_id)
-                .orElseThrow(()-> new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден"));
-        TaskEntity taskEntity = taskRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Задача с id: " + id + " не найдена"));
-        taskRepository.deleteByIdAndUserEntity_Id(id, user_id);
+    public void deleteTask(Long task_id, Long user_id) {
+        TaskEntity taskForDelete = taskRepository.findById(task_id)
+                .orElseThrow(() -> new ResourceNotFoundException("Задача с id: " + task_id + " не найдена"));
+        if (!taskForDelete.getUserEntity().getId().equals(user_id)) {
+            throw new ResourceNotFoundException("Задача с id: " + task_id + " не принадлежит пользователю с id: " + user_id);
+        }
+        taskRepository.delete(taskForDelete);
     }
 
     @Override
     public List<TaskDTO> filterTasksByStatus(FilterByStatus status, Long user_id) {
-        UserEntity userEntity = userRepository.findById(user_id)
-                .orElseThrow(()-> new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден"));
-
+        if (!userRepository.existsById(user_id)) {
+            throw new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден");
+        }
         return  taskRepository.findByStatusAndUserEntity_Id(status, user_id )
                 .stream()
                 .map(TaskDTO::toModel)
@@ -61,25 +60,59 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<TaskDTO> sortTasks(SortByDateOrStatus filter, Long user_id) {
-        UserEntity userEntity = userRepository.findById(user_id)
-                .orElseThrow(()-> new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден"));
+        if (!userRepository.existsById(user_id)) {
+            throw new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден");
+        }
+            switch (filter) {
+                case BY_DATE_ASC -> {
+                    return taskRepository.findAllByUserEntityIdOrderByDueDateAsc(user_id)
+                            .stream()
+                            .map(TaskDTO::toModel)
+                            .toList();
+                }
+                case BY_DATE_DESC -> {
+                    return taskRepository.findAllByUserEntityIdOrderByDueDateDesc(user_id)
+                            .stream()
+                            .map(TaskDTO::toModel)
+                            .toList();
+                }
+                case BY_STATUS -> {
+                    return taskRepository.findAllByUserEntityIdOrderByStatusAsc(user_id)
+                            .stream()
+                            .map(TaskDTO::toModel)
+                            .toList();
+                }
+                default -> {
+                    return taskRepository.findAllByUserEntityId(user_id)
+                            .stream()
+                            .map(TaskDTO::toModel)
+                            .toList();
+                }
+            }
 
-        return taskRepository.sortTasks(filter, user_id)
-                .stream()
-                .map(TaskDTO::toModel)
-                .toList();
     }
 
     @Override
-    public TaskDTO updateTask(Long id, TaskEntity taskEntity) {
-        TaskEntity existingTask = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Задачи не существует"));
+    public TaskDTO updateTask (Long task_id, TaskDTO taskDTO, Long user_id){
+        TaskEntity existingTask = taskRepository.findById(task_id)
+                .orElseThrow(() -> new ResourceNotFoundException("Задача с id: " + task_id + " не найдена"));
+        if(!existingTask.getUserEntity().getId().equals(user_id)) {
+            throw new ResourceNotFoundException("Задача с id: " + task_id + " не принадлежит пользователю с id: " + user_id);
+        }
 
-        existingTask.setTitle(taskEntity.getTitle());
-        existingTask.setDescription(taskEntity.getDescription());
-        existingTask.setStatus(taskEntity.getStatus());
-        existingTask.setDueDate(taskEntity.getDueDate());
-
-        return TaskDTO.toModel(taskRepository.save(existingTask));
+        if (taskDTO.getTitle() != null) {
+            existingTask.setTitle(taskDTO.getTitle());
+        }
+        if (taskDTO.getDescription() != null) {
+            existingTask.setDescription(taskDTO.getDescription());
+        }
+        if (taskDTO.getStatus() != null) {
+            existingTask.setStatus(taskDTO.getStatus());
+        }
+        if (taskDTO.getDueDate() != null) {
+            existingTask.setDueDate(taskDTO.getDueDate());
+        }
+            return TaskDTO.toModel(taskRepository.save(existingTask));
     }
+
 }

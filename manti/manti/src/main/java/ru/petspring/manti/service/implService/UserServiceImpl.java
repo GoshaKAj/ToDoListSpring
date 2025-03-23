@@ -3,6 +3,7 @@ package ru.petspring.manti.service.implService;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.petspring.manti.ecxeption.ResourceAlreadyExistsException;
@@ -16,20 +17,13 @@ import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     @Override
     public UserDTO saveUser(UserEntity userEntity) {
-        if(userRepository.findByName(userEntity.getName()) != null) {
-            throw new ResourceAlreadyExistsException("Пользователь с таким именем: " + userEntity.getName() + ", уже существует");
-        }
         return UserDTO.toModelUser(userRepository.save(userEntity));
     }
 
@@ -52,8 +46,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        UserEntity userEntity = userRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Пользователь с id: "+ id + " не найден"));
+        if(!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Пользователь с id: "+ id + " не найден");
+        }
         userRepository.deleteById(id);
     }
 }

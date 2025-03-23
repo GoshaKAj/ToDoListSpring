@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
+import ru.petspring.manti.model.TaskDTO;
 
 import java.time.LocalDate;
 
@@ -32,4 +33,13 @@ public class TaskEntity {
     @ManyToOne()
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
+
+    public static TaskEntity toEntityTask(TaskDTO taskDTO) {
+        TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setTitle(taskDTO.getTitle());
+        taskEntity.setDescription(taskDTO.getDescription());
+        taskEntity.setDueDate(taskDTO.getDueDate());
+        taskEntity.setStatus(taskDTO.getStatus());
+        return taskEntity;
+    }
 }
