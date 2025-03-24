@@ -1,9 +1,7 @@
 package ru.petspring.manti.service.implService;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ru.petspring.manti.ecxeption.*;
@@ -17,7 +15,7 @@ import ru.petspring.manti.repository.UserRepository;
 import ru.petspring.manti.service.TaskService;
 
 import java.util.List;
-
+import java.util.Optional;
 
 
 @Service
@@ -100,19 +98,12 @@ public class TaskServiceImpl implements TaskService {
             throw new ResourceNotFoundException("Задача с id: " + task_id + " не принадлежит пользователю с id: " + user_id);
         }
 
-        if (taskDTO.getTitle() != null) {
-            existingTask.setTitle(taskDTO.getTitle());
-        }
-        if (taskDTO.getDescription() != null) {
-            existingTask.setDescription(taskDTO.getDescription());
-        }
-        if (taskDTO.getStatus() != null) {
-            existingTask.setStatus(taskDTO.getStatus());
-        }
-        if (taskDTO.getDueDate() != null) {
-            existingTask.setDueDate(taskDTO.getDueDate());
-        }
-            return TaskDTO.toModel(taskRepository.save(existingTask));
+        Optional.ofNullable(taskDTO.getTitle()).ifPresent(existingTask::setTitle);
+        Optional.ofNullable(taskDTO.getDescription()).ifPresent(existingTask::setDescription);
+        Optional.ofNullable(taskDTO.getStatus()).ifPresent(existingTask::setStatus);
+        Optional.ofNullable(taskDTO.getDueDate()).ifPresent(existingTask::setDueDate);
+
+        return TaskDTO.toModel(taskRepository.save(existingTask));
     }
 
 }
