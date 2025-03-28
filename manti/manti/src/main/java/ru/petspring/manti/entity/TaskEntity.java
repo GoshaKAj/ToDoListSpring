@@ -2,10 +2,11 @@ package ru.petspring.manti.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
+import ru.petspring.manti.enums.Status;
 import ru.petspring.manti.model.TaskDTO;
 
 import java.time.LocalDate;
@@ -28,7 +29,8 @@ public class TaskEntity {
     private LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)
-    private FilterByStatus status;
+    @NotNull(message = "Статус обязателен")
+    private Status status;
 
     @ManyToOne()
     @JoinColumn(name = "user_id")

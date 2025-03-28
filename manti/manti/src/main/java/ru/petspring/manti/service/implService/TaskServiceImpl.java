@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import ru.petspring.manti.ecxeption.*;
 import ru.petspring.manti.entity.TaskEntity;
 import ru.petspring.manti.entity.UserEntity;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.SortByDateOrStatus;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
+import ru.petspring.manti.enums.SortByDateOrStatus;
+import ru.petspring.manti.enums.Status;
 import ru.petspring.manti.model.TaskDTO;
 import ru.petspring.manti.repository.TaskRepository;
 import ru.petspring.manti.repository.UserRepository;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class TaskServiceImpl implements TaskService {
+public class   TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
@@ -46,7 +46,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskDTO> filterTasksByStatus(FilterByStatus status, Long user_id) {
+    public List<TaskDTO> filterTasksByStatus(Status status, Long user_id) {
         if (!userRepository.existsById(user_id)) {
             throw new ResourceNotFoundException("Пользователь с id: " + user_id + " не найден");
         }

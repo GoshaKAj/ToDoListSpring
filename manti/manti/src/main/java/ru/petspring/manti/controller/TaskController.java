@@ -1,15 +1,12 @@
 package ru.petspring.manti.controller;
 
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.petspring.manti.ecxeption.InvalidStatusException;
-import ru.petspring.manti.entity.TaskEntity;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.SortByDateOrStatus;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
+import ru.petspring.manti.enums.SortByDateOrStatus;
+import ru.petspring.manti.enums.Status;
 import ru.petspring.manti.model.TaskDTO;
 import ru.petspring.manti.service.TaskService;
 
@@ -39,12 +36,11 @@ public class TaskController {
             throw new InvalidStatusException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
         return taskService.updateTask(task_id, taskDTO, user_id);
-
     }
 
     @GetMapping("/filter")
     public List<TaskDTO> filterTasksByStatus(@PathVariable Long user_id,
-                                             @RequestParam FilterByStatus status){
+                                             @RequestParam Status status){
        return taskService.filterTasksByStatus(status, user_id);
     }
 

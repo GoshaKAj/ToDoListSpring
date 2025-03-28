@@ -6,20 +6,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
+import ru.petspring.manti.ecxeption.ResourceNotFoundException;
 import ru.petspring.manti.entity.TaskEntity;
 import ru.petspring.manti.entity.UserEntity;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
-import ru.petspring.manti.model.TaskDTO;
+import ru.petspring.manti.enums.Status;
 import ru.petspring.manti.model.UserDTO;
 import ru.petspring.manti.repository.UserRepository;
 import ru.petspring.manti.service.implService.UserServiceImpl;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 
@@ -35,20 +36,18 @@ public class UserServiceTest {
     @Test
     public void testSaveUser(){
 
-        UserEntity user = new UserEntity();
+        UserDTO user = new UserDTO();
         user.setName("test Name");
-        user.setId(1L);
 
-       // when(userRepository.findByName(user.getName())).thenReturn(null);
-        when(userRepository.save(user)).thenReturn(user);
+        UserEntity userEntity = UserEntity.toUserEntity(user);
+
+        when(userRepository.save(userEntity)).thenReturn(userEntity);
 
         UserDTO result = userService.saveUser(user);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals("test Name", result.getName());
-
-        //verify(userRepository).findByName(user.getName());
-        verify(userRepository).save(user);
+        assertNotNull(result);
+        assertEquals("test Name", result.getName());
+        verify(userRepository).save(userEntity);
     }
 
     @Test
@@ -66,8 +65,8 @@ public class UserServiceTest {
 
         List<UserDTO> result = userService.getAllUsers();
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
+        assertNotNull(result);
+        assertEquals(2, result.size());
 
         verify(userRepository, times(1)).findAll();
     }
@@ -84,19 +83,23 @@ public class UserServiceTest {
         task.setTitle("Test Title");
         task.setDescription("Test Description");
         task.setDueDate(LocalDate.now());
-        task.setStatus(FilterByStatus.TODO);
+        task.setStatus(Status.TODO);
         task.setUserEntity(user);
 
         tasks.add(task);
         user.setTaskEntity(tasks);
 
-        when(userRepository.findByName(user.getName())).thenReturn(user);
+        when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
 
         UserDTO result = userService.findByName(user.getName());
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals("test Name", result.getName());
-        Assertions.assertEquals("Test Title", result.getTasks().get(0).getTitle());
+        assertNotNull(result);
+        assertEquals("test Name", result.getName());
+        assertEquals("Test Title", result.getTasks().get(0).getTitle());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> userService.findByName(null));
+        assertEquals("Пользователь с таким именем: " + null + " не найден", exception.getMessage());
 
         verify(userRepository, times(1)).findByName(user.getName());
     }
@@ -107,12 +110,16 @@ public class UserServiceTest {
         user.setId(1L);
         user.setName("test Name");
 
-        //when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(userRepository.existsById(1L)).thenReturn(true);
 
         userService.deleteUser(user.getId());
 
-        Assertions.assertEquals(0, userService.getAllUsers().size());
+        assertEquals(0, userService.getAllUsers().size());
+
+        Long exceptionUserId = 321L;
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> userService.deleteUser(exceptionUserId));
+        assertEquals("Пользователь с id: "+ exceptionUserId + " не найден", exception.getMessage() );
 
         verify(userRepository, times(1)).existsById(user.getId());
         verify(userRepository, times(1)).deleteById(user.getId());

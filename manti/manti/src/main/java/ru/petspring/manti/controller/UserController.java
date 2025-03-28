@@ -31,12 +31,12 @@ public class UserController {
     }
 
     @PostMapping
-    public UserDTO saveUser(@Valid @RequestBody UserEntity userEntity,
+    public UserDTO saveUser(@Valid @RequestBody UserDTO userDTO,
                             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidStatusException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        return userService.saveUser(userEntity);
+        return userService.saveUser(userDTO);
     }
 
     @DeleteMapping("{user_id}")

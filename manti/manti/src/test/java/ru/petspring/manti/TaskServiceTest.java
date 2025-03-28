@@ -4,26 +4,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.petspring.manti.ecxeption.ResourceNotFoundException;
 import ru.petspring.manti.entity.TaskEntity;
 import ru.petspring.manti.entity.UserEntity;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.SortByDateOrStatus;
-import ru.petspring.manti.entity.taskFilterOrSortMethod.FilterByStatus;
+import ru.petspring.manti.enums.SortByDateOrStatus;
+import ru.petspring.manti.enums.Status;
 import ru.petspring.manti.model.TaskDTO;
 import ru.petspring.manti.repository.TaskRepository;
 import ru.petspring.manti.repository.UserRepository;
 import ru.petspring.manti.service.implService.TaskServiceImpl;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +47,7 @@ public class TaskServiceTest {
         taskDTO.setTitle("Title");
         taskDTO.setDescription("Description");
         taskDTO.setDueDate(LocalDate.now());
-        taskDTO.setStatus(FilterByStatus.TODO);
+        taskDTO.setStatus(Status.TODO);
         TaskEntity taskEntity = TaskEntity.toEntityTask(taskDTO);
         taskEntity.setUserEntity(userEntity);
 
@@ -63,7 +60,8 @@ public class TaskServiceTest {
 
         assertNotNull(result);
         assertEquals("Title", result.getTitle());
-        assertEquals(FilterByStatus.TODO, result.getStatus());
+        assertEquals(Status.TODO, result.getStatus());
+        assertThrows(ResourceNotFoundException.class, () -> taskService.createTask(taskDTO, 2L));
     }
 
     @Test
@@ -85,12 +83,13 @@ public class TaskServiceTest {
         assertEquals(0, taskRepository.findAll().size());
 
         verify(taskRepository).delete(taskEntity);
+        assertThrows(ResourceNotFoundException.class, () -> taskService.deleteTask(2L, userId));
 
     }
     @Test
     public void testFilterTasksByStatus(){
         Long userId = 1L;
-        FilterByStatus status = FilterByStatus.TODO;
+        Status status = Status.TODO;
 
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
@@ -100,7 +99,7 @@ public class TaskServiceTest {
         taskEntity1.setTitle("Test Title");
         taskEntity1.setDescription("Test Description");
         taskEntity1.setDueDate(LocalDate.now());
-        taskEntity1.setStatus(FilterByStatus.TODO);
+        taskEntity1.setStatus(Status.TODO);
         taskEntity1.setUserEntity(userEntity);
 
         TaskEntity taskEntity2 = new TaskEntity();
@@ -108,7 +107,7 @@ public class TaskServiceTest {
         taskEntity2.setTitle("Test Title2");
         taskEntity2.setDescription("Test Description2");
         taskEntity2.setDueDate(LocalDate.now());
-        taskEntity2.setStatus(FilterByStatus.DONE);
+        taskEntity2.setStatus(Status.DONE);
         taskEntity2.setUserEntity(userEntity);
 
         when(userRepository.existsById(userId)).thenReturn(true);
@@ -120,6 +119,7 @@ public class TaskServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Test Title", result.get(0).getTitle());
+        assertThrows(ResourceNotFoundException.class, () -> taskService.filterTasksByStatus(status, 654L));
     }
    @Test
     public void testSortTasks(){
@@ -133,7 +133,7 @@ public class TaskServiceTest {
        TaskEntity assertTaskEntity = new TaskEntity();
        assertTaskEntity.setId(1L);
        assertTaskEntity.setTitle("Test Title");
-       assertTaskEntity.setStatus(FilterByStatus.TODO);
+       assertTaskEntity.setStatus(Status.TODO);
        assertTaskEntity.setDueDate(LocalDate.now().plusDays(1));
        assertTaskEntity.setUserEntity(userEntity);
 
@@ -141,7 +141,7 @@ public class TaskServiceTest {
        assertTaskEntity2.setId(2L);
        assertTaskEntity2.setTitle("Test Title2");
        assertTaskEntity2.setDueDate(LocalDate.now().plusDays(2));
-       assertTaskEntity2.setStatus(FilterByStatus.DONE);
+       assertTaskEntity2.setStatus(Status.DONE);
        assertTaskEntity2.setUserEntity(userEntity);
 
        when(userRepository.existsById(userId)).thenReturn(true);
@@ -155,14 +155,18 @@ public class TaskServiceTest {
        assertNotNull(resultSortByDate);
        assertEquals(2, resultSortByDate.size());
        assertEquals("Test Title", resultSortByDate.get(0).getTitle());
+       assertThrows(ResourceNotFoundException.class, () -> taskService.sortTasks(sortByDate, 534L));
+
 
        List<TaskDTO> resultSortByStatus = taskService.sortTasks(sortByStatus, userId);
 
        assertNotNull(resultSortByStatus);
        assertEquals(2, resultSortByStatus.size());
-       assertEquals(FilterByStatus.DONE, resultSortByStatus.get(0).getStatus());
+       assertEquals(Status.DONE, resultSortByStatus.get(0).getStatus());
 
        verify(userRepository,times(2)).existsById(userId);
+
+
   }
     @Test
     public void testUpdateTask(){
@@ -177,22 +181,20 @@ public class TaskServiceTest {
         existingTask.setId(1L);
         existingTask.setTitle("Old Title");
         existingTask.setDescription("Old Description");
-        existingTask.setStatus(FilterByStatus.TODO);
+        existingTask.setStatus(Status.TODO);
         existingTask.setDueDate(LocalDate.now());
         existingTask.setUserEntity(userEntity);
 
         TaskDTO updatedTaskAll = new TaskDTO();
-        updatedTaskAll.setId(2L);
         updatedTaskAll.setTitle("New Title");
         updatedTaskAll.setDescription("New Description");
-        updatedTaskAll.setStatus(FilterByStatus.IN_PROGRESS);
+        updatedTaskAll.setStatus(Status.IN_PROGRESS);
         updatedTaskAll.setDueDate(LocalDate.now().plusDays(1));
-        //updatedTaskAll.setUserEntity(userEntity);
 
         TaskDTO updatedTaskWithNullFields = new TaskDTO();
 
         updatedTaskWithNullFields.setDescription("Description");
-        updatedTaskWithNullFields.setStatus(FilterByStatus.DONE);
+        updatedTaskWithNullFields.setStatus(Status.DONE);
 
 
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(existingTask));
@@ -203,14 +205,15 @@ public class TaskServiceTest {
         assertNotNull(result);
         assertEquals("New Title", result.getTitle());
         assertEquals("New Description", result.getDescription());
-        assertEquals(FilterByStatus.IN_PROGRESS, result.getStatus());
+        assertEquals(Status.IN_PROGRESS, result.getStatus());
 
         TaskDTO resultWithNullFields = taskService.updateTask(taskId, updatedTaskWithNullFields,userId);
 
         assertNotNull(result);
         assertEquals("New Title", resultWithNullFields.getTitle());
         assertEquals("Description", resultWithNullFields.getDescription());
-        assertEquals(FilterByStatus.DONE, resultWithNullFields.getStatus());
+        assertEquals(Status.DONE, resultWithNullFields.getStatus());
+        assertThrows(ResourceNotFoundException.class, () -> taskService.updateTask(5L, new TaskDTO(), 3124L));
 
         verify(taskRepository, times(2)).findById(taskId);
         verify(taskRepository, times(2)).save(existingTask);

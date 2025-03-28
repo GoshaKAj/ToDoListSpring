@@ -9,7 +9,7 @@ import java.util.List;
 @Service
 public interface UserService {
 
-    UserDTO saveUser(UserEntity userEntity);
+    UserDTO saveUser(UserDTO userDTO);
     void deleteUser(Long id);
     List<UserDTO> getAllUsers();
     UserDTO findByName(String name);

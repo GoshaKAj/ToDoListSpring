@@ -14,6 +14,7 @@ import ru.petspring.manti.repository.UserRepository;
 import ru.petspring.manti.service.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -23,7 +24,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDTO saveUser(UserEntity userEntity) {
+    public UserDTO saveUser(UserDTO userDTO) {
+        UserEntity userEntity = UserEntity.toUserEntity(userDTO);
         return UserDTO.toModelUser(userRepository.save(userEntity));
     }
 
@@ -37,11 +39,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findByName(String name) {
-        UserEntity userEntity = userRepository.findByName(name);
-        if(userEntity == null) {
-            throw new ResourceNotFoundException("Пользователь с таким именем: " + name + " не найден");
-        }
-        return UserDTO.toModelUserWithTasks(userEntity);
+        return userRepository.findByName(name)
+                .map(UserDTO::toModelUserWithTasks)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с таким именем: " + name + " не найден"));
     }
 
     @Override

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.petspring.manti.model.UserDTO;
 
 import java.util.List;
 
@@ -25,10 +26,12 @@ public class UserEntity {
     @Column(unique = true)
     private String name;
 
-    @NotEmpty(message = "Password should not be empty")
-    private String password;
-
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
     private List<TaskEntity> taskEntity;
+
+    public static UserEntity toUserEntity(UserDTO userDTO) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setName(userDTO.getName());
+        return userEntity;
+    }
 }

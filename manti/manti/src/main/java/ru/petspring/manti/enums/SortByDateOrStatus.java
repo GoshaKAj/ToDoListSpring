@@ -1,4 +1,4 @@
-package ru.petspring.manti.entity.taskFilterOrSortMethod;
+package ru.petspring.manti.enums;
 
 public enum SortByDateOrStatus {
     BY_DATE_ASC,    // Сортировка по дате (по возрастанию)
